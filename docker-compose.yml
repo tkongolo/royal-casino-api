@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  postgresdb:
+    image: postgres:14.2-alpine
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=$DB_PASSWORD
+      - APP_USER=$DB_USERNAME
+      - APP_PASSWORD=$DB_PASSWORD
+      - APP_DB=$DB_DATABASE
+    ports:
+      - $DB_PORT:$POSTGRESQL_DOCKER_PORT
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d/
+      - pgdata:/var/lib/postgresql/data
+  app:
+    build: .
+    depends_on:
+      - postgresdb
+    restart: on-failure
+    env_file: ./.env
+    ports:
+      - $NODEAPP_LOCAL_PORT:$APP_PORT
+    stdin_open: true
+    tty: true
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/royal_casino.json
+volumes:
+  pgdata:
